@@ -29,30 +29,30 @@ void VulkanWindow::keyPressEvent(QKeyEvent *event)
         dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, 0.0f, -1.0f);
     }
 
-    if(event->key() == Qt::Key_O)
+    if(event->key() == Qt::Key_R)
     {
         dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, 0.0f, 1.0f);
     }
 
     if(event->key() == Qt::Key_A)
     {
-        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(1.0f, 0.0f, 0.0f);
+        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(0.5f, 0.0f, 0.0f);
     }
 
 
     if(event->key() == Qt::Key_D)
     {
-        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(-1.0f, 0.0f, 0.0f);
+        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(-0.5f, 0.0f, 0.0f);
     }
 
     if(event->key() == Qt::Key_W)
     {
-        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, -1.0f, 0.0f);
+        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, -0.5f, 0.0f);
     }
 
     if(event->key() == Qt::Key_S)
     {
-        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, 1.0f, 0.0f);
+        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, 0.5f, 0.0f);
     }
 
 

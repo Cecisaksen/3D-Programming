@@ -19,6 +19,6 @@ VkTriangle::VkTriangle() : VisualObject()
 
 
     // Flytter trekanten litt til venstre og lagrer translasjonen i en 4x4 matrise
-    mMatrix.translate(-0.25f, 0, 0);
+    mMatrix.translate(-100.f, 0, 0);
 }
 

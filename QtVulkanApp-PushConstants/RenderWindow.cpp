@@ -1,5 +1,6 @@
 
 #include "RenderWindow.h"
+#include "graph.h"
 #include <QVulkanFunctions>
 #include <QFile>
 
@@ -23,10 +24,11 @@ RenderWindow::RenderWindow(QVulkanWindow *w, bool msaa)
             }
         }
     }
-    // Dag 230125
 
     mObjects.push_back(new VkTriangle());
     mObjects.push_back((new VKTriangleSurface()));
+    mObjects.push_back((new graph()));
+
 }
 
 void RenderWindow::initResources()
@@ -39,12 +41,11 @@ void RenderWindow::initResources()
     change so one buffer is sufficient regardless of the value of
     QVulkanWindow::CONCURRENT_FRAME_COUNT. */
 
-    const int concurrentFrameCount = mWindow->concurrentFrameCount(); // 2 on Oles Machine
+    const int concurrentFrameCount = mWindow->concurrentFrameCount();
     const VkPhysicalDeviceLimits *pdevLimits = &mWindow->physicalDeviceProperties()->limits;
     const VkDeviceSize uniAlign = pdevLimits->minUniformBufferOffsetAlignment;
-    qDebug("uniform buffer offset alignment is %u", (uint)uniAlign); //64 on Oles machine
+    qDebug("uniform buffer offset alignment is %u", (uint)uniAlign);
 
-    /// Dag 240125:
     VkBufferCreateInfo bufferInfo{};
     memset(&bufferInfo, 0, sizeof(bufferInfo)); //Clear out the memory
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO; // Set the structure type
@@ -152,7 +153,7 @@ void RenderWindow::initResources()
     memset(&ia, 0, sizeof(ia));
     ia.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     // Dag 220125
-    ia.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    ia.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
     pipelineInfo.pInputAssemblyState = &ia;
 
     // The viewport and scissor will be set dynamically via vkCmdSetViewport/Scissor.
@@ -469,6 +470,13 @@ void RenderWindow::releaseResources()
             mDeviceFunctions->vkDestroyBuffer(dev, (*it)->mBuffer, nullptr);
             (*it)->mBuffer = VK_NULL_HANDLE;
         }
+    }
+    for (auto it=mObjects.begin(); it!=mObjects.end(); it++) {
+        if ((*it)->mBufferMemory) {
+            mDeviceFunctions->vkFreeMemory(dev, (*it)->mBufferMemory, nullptr);
+            (*it)->mBuffer = VK_NULL_HANDLE;
+        }
+
     }
     for (auto it=mObjects.begin(); it!=mObjects.end(); it++) {
         if ((*it)->mBufferMemory) {

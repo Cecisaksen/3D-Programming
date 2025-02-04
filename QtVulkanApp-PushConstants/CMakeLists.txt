@@ -16,6 +16,8 @@ qt_add_executable(QtVulkanApp
     VKTriangleSurface.h VKTriangleSurface.cpp
     VisualObject.h VisualObject.cpp
     VkCamera.h VkCamera.cpp
+    graph.h graph.cpp
+    Spiral.h Spiral.cpp
 )
 # Define the shader files
 set(SHADER_FILES
