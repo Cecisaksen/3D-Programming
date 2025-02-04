@@ -1,21 +1,24 @@
+#include "VKTriangle.h"
 #include <vector>
 #include "Vertex.h"
 #include "VisualObject.h"
 
-class VkTriangle : public VisualObject {
+class VKTriangle : public VisualObject {
 public:
     //std::vector<Vertex> mVertices;
-    VkTriangle();
+    VKTriangle();
     //std::vector<Vertex> getVertices() { return mVertices; }
 };
 
 
 VkTriangle::VkTriangle() : VisualObject()
 {
-    Vertex v1{-1.0f,   0.0f,  0.0f,   1.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-    Vertex v2{1.0f,   0.0f,  0.0f,   0.0f, 1.0f, 0.0f, 0.0f, 0.0f};
-    Vertex v3{0.0f,   1.0f,  0.0f,   0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
-    mVertices.push_back(v1);
-    mVertices.push_back(v2);
-    mVertices.push_back(v3);
+    mVertices.push_back(Vertex{-0.5f,   0.0f,  0.0f,   1.0f, 0.0f, 0.0f, 0.0f, 0.0f});
+    mVertices.push_back(Vertex{-0.5f,   -0.5f,  0.0f,   0.0f, 1.0f, 0.0f, 0.0f, 0.0f});
+    mVertices.push_back(Vertex{0.0f,   0.0f,  0.0f,   0.0f, 0.0f, 1.0f, 0.0f, 0.0f});
+
+
+    // Flytter trekanten litt til venstre og lagrer translasjonen i en 4x4 matrise
+    mMatrix.translate(-0.25f, 0, 0);
 }
+

@@ -1,8 +1,6 @@
 #ifndef VKTRIANGLESURFACE_H
 #define VKTRIANGLESURFACE_H
-#include <vector>
 #include <string>
-#include "vertex.h"
 #include "visualobject.h"
 
 

@@ -33,5 +33,7 @@ protected:
     //    void keyReleaseEvent(QKeyEvent *event) override{}
     //    void wheelEvent(QWheelEvent *event) override{}
 
+     QVulkanWindowRenderer* mRenderWindow;
 };
+
 #endif // VULKANWINDOW_H

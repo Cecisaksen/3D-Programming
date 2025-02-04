@@ -3,7 +3,7 @@
 #include "VisualObject.h"
 #include <fstream>
 
-VKTriangleSurface::VKTriangleSurface():VisualObject()
+VKTriangleSurface::VKTriangleSurface() : VisualObject()
 {
     Vertex v1{0.0f,   0.0f,  0.0f,   1.0f, 0.0f, 0.0f, 0.0f, 0.0f};
     Vertex v2{1.0f,   0.0f,  0.0f,   0.0f, 1.0f, 0.0f, 0.0f, 0.0f};
@@ -15,7 +15,12 @@ VKTriangleSurface::VKTriangleSurface():VisualObject()
     mVertices.push_back(v3);
     mVertices.push_back(v2);
     mVertices.push_back(v4);
+
+
+    //  Skalerer ned kvadratet i eget koordinatsystem/frame
+    mMatrix.scale(0.25f);
 }
+
 
 VKTriangleSurface::VKTriangleSurface(const std::string &filename)
 {

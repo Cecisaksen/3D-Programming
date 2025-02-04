@@ -2,7 +2,7 @@
 #define VISUALOBJECT_H
 
 
-#include <QVulkanWindow> 	// VkDeviceMemory, VkBuffer defined here
+#include <QVulkanWindow>
 #include <vector>
 #include "vertex.h"
 
@@ -19,6 +19,17 @@ public:
     VkPrimitiveTopology mTopology { VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST };
     //
     QMatrix4x4 mMatrix;
+    void move(float x, float y, float z) {
+        mMatrix.translate(x, y, z);
+    }
+    void scale(float s) {
+        mMatrix.scale(s);
+    }
+    void rotate(float t, float x, float y, float z) {
+        mMatrix.rotate(t, x, y, z);
+    }
+
 };
+
 
 #endif // VISUALOBJECT_H

@@ -1,18 +1,14 @@
 #ifndef VKTRIANGLE_H
 #define VKTRIANGLE_H
 
-#include <vector>
-#include "vertex.h"
+#include "VisualObject.h"
 
 
-class VKTriangle {
+class VkTriangle : public VisualObject {
 public:
-    std::vector<Vertex> mVertices;
-    VKTriangle();
-    std::vector<Vertex> getVertices() { return mVertices; }
+    //std::vector<Vertex> mVertices;
+    VkTriangle();
+    //std::vector<Vertex> getVertices() { return mVertices; }
 };
 
-
 #endif // VKTRIANGLE_H
-
-

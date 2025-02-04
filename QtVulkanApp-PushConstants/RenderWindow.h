@@ -1,10 +1,13 @@
+
 #ifndef RENDERWINDOW_H
 #define RENDERWINDOW_H
 
 #include <QVulkanWindow>
-#include "VKTriangle.h"
-#include "Vertex.h"
-#include "VKTriangleSurface.h"
+#include <vector>
+#include "VkTriangle.h"
+#include "VkTrianglesurface.h"
+#include "visualobject.h"
+#include "vkcamera.h"
 
 class RenderWindow : public QVulkanWindowRenderer
 {
@@ -33,12 +36,14 @@ public:
     //Get Vulkan info - just for fun
     void getVulkanHWInfo();
 
+    std::vector<VisualObject*>& getObjects() { return mObjects; }
+
 protected:
 
     //Creates the Vulkan shader module from the precompiled shader files in .spv format
     VkShaderModule createShader(const QString &name);
 
-	void setModelMatrix(QMatrix4x4 modelMatrix);
+    void setModelMatrix(QMatrix4x4 modelMatrix);
 
     //The ModelViewProjection MVP matrix
     QMatrix4x4 mProjectionMatrix;
@@ -51,7 +56,7 @@ protected:
 
     VkDeviceMemory mBufferMemory{ VK_NULL_HANDLE };
     VkBuffer mBuffer{ VK_NULL_HANDLE };
- 
+
     VkDescriptorPool mDescriptorPool{ VK_NULL_HANDLE };
     VkDescriptorSetLayout mDescriptorSetLayout{ VK_NULL_HANDLE };
     VkDescriptorSet mDescriptorSet[QVulkanWindow::MAX_CONCURRENT_FRAME_COUNT]{ VK_NULL_HANDLE };
@@ -60,23 +65,22 @@ protected:
     VkPipelineLayout mPipelineLayout{ VK_NULL_HANDLE };
     VkPipeline mPipeline{ VK_NULL_HANDLE };
 
-
 private:
-
-    void updateUniformBuffer(const QMatrix4x4& modelMatrix, int currentFrame);
-
-    VKTriangle mTriangle;
+    friend class VulkanWindow;
+    VkTriangle mTriangle;
     VKTriangleSurface mSurface;
     VisualObject mVisualObject;
     std::vector<VisualObject*> mObjects;
 
-
     void createBuffer(VkDevice logicalDevice,
-                      const VkDeviceSize uniAlign,
-                      VisualObject* visualObject,
+                      const VkDeviceSize uniAlign, VisualObject* visualObject,
                       VkBufferUsageFlags usage=VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-
-
+    //VkBuffer& buffer,
+    //VkDeviceMemory& bufferMemory) ;
+    VkCamera mCamera;
+    //VkDevice logicalDevice;
+    //VkPipelineInputAssemblyStateCreateInfo ia;
+    //VkGraphicsPipelineCreateInfo pipelineInfo;
 };
 
 #endif // RENDERWINDOW_H
