@@ -6,9 +6,9 @@
 // Constructor
 graph::graph() : VisualObject()
 {
-    float lower = -5.0f;   // Start of the x-range (a)
-    float upper = 5.0f;    // End of the x-range (b)
-    int n = 1000;           // Number of intervals (n)
+    float lower = -5.0f;
+    float upper = 5.0f;
+    int n = 100;           // Number of intervals (n)
     float h = (upper - lower) / n;
 
     std::ofstream file("vertexData.txt");
@@ -23,11 +23,11 @@ graph::graph() : VisualObject()
         float slope = derivative(x, h);
 
         // Determine color
-        float r = slope > 0 ? 0.0f : 1.0f;  // Purple for decreasing slope
-        float g = slope > 0 ? 1.0f : 0.0f;  // Green for increasing slope
-        float b = slope > 0 ? 0.0f : 1.0f;  // Purple for decreasing slope
+        float r = slope > 0 ? 0.0f : 1.0f;  // Purple for decreasing
+        float g = slope > 0 ? 1.0f : 0.0f;  // Green for increasing
+        float b = slope > 0 ? 0.0f : 1.0f;  // Purple for decreasing
 
-        // Add the vertex to the list with color based on slope
+
         mVertices.push_back(Vertex{x, y, 0.0f, r, g, b, 0.0f, 0.0f});
 
         // Write the vertex data to the file

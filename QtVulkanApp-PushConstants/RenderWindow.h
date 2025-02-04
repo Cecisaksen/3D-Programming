@@ -4,8 +4,10 @@
 
 #include <QVulkanWindow>
 #include <vector>
+#include "Spiral.h"
 #include "VkTriangle.h"
 #include "VkTrianglesurface.h"
+#include "graph.h"
 #include "visualobject.h"
 #include "vkcamera.h"
 
@@ -37,6 +39,7 @@ public:
     void getVulkanHWInfo();
 
     std::vector<VisualObject*>& getObjects() { return mObjects; }
+
 
 protected:
 

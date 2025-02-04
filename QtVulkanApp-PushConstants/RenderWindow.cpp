@@ -1,5 +1,6 @@
 
 #include "RenderWindow.h"
+#include "Spiral.h"
 #include "graph.h"
 #include <QVulkanFunctions>
 #include <QFile>
@@ -27,7 +28,8 @@ RenderWindow::RenderWindow(QVulkanWindow *w, bool msaa)
 
     mObjects.push_back(new VkTriangle());
     mObjects.push_back((new VKTriangleSurface()));
-    mObjects.push_back((new graph()));
+    //mObjects.push_back((new graph()));
+    mObjects.push_back((new Spiral()));
 
 }
 
@@ -470,6 +472,13 @@ void RenderWindow::releaseResources()
             mDeviceFunctions->vkDestroyBuffer(dev, (*it)->mBuffer, nullptr);
             (*it)->mBuffer = VK_NULL_HANDLE;
         }
+    }
+    for (auto it=mObjects.begin(); it!=mObjects.end(); it++) {
+        if ((*it)->mBufferMemory) {
+            mDeviceFunctions->vkFreeMemory(dev, (*it)->mBufferMemory, nullptr);
+            (*it)->mBuffer = VK_NULL_HANDLE;
+        }
+
     }
     for (auto it=mObjects.begin(); it!=mObjects.end(); it++) {
         if ((*it)->mBufferMemory) {

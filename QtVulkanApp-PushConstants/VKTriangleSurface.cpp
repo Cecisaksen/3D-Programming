@@ -19,7 +19,7 @@ VKTriangleSurface::VKTriangleSurface() : VisualObject()
 
     //  Skalerer ned kvadratet i eget koordinatsystem/frame
     mMatrix.scale(0.25f);
-    mMatrix.translate(-100.f, 0, 0);
+    mMatrix.translate(-10.f, 0, 0);
 }
 
 
