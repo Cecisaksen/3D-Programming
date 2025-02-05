@@ -2,18 +2,18 @@
 #define SPIRAL_H
 
 #include "VisualObject.h"
-#include <vector>
+#include <QMatrix4x4>
 
 class Spiral : public VisualObject
 {
 public:
-    Spiral(float numLoops = 5.0f, float numPoints = 100.0f, float scale = 1.0f);
+    Spiral();  // Constructor to initialize the spiral
 
-    // Function to get the vertices of the spiral
-    std::vector<Vertex>& getVertices() { return mVertices; }
+    // New method to rotate the spiral in 3D space
+    void rotate(float angleX, float angleY, float angleZ);
 
 private:
-    void generateSpiral(float numLoops, float numPoints, float scale);
+         // Any other members needed for the spiral can go here
 };
 
 #endif // SPIRAL_H

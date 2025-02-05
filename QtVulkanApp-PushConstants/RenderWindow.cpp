@@ -1,5 +1,6 @@
 
 #include "RenderWindow.h"
+#include "FunctionGraph.h"
 #include "Spiral.h"
 #include "graph.h"
 #include <QVulkanFunctions>
@@ -28,8 +29,10 @@ RenderWindow::RenderWindow(QVulkanWindow *w, bool msaa)
 
     mObjects.push_back(new VkTriangle());
     mObjects.push_back((new VKTriangleSurface()));
-    //mObjects.push_back((new graph()));
+    mObjects.push_back((new graph()));
     mObjects.push_back((new Spiral()));
+    mObjects.push_back((new FunctionGraph()));
+
 
 }
 
@@ -287,7 +290,7 @@ void RenderWindow::startNextFrame()
         mDeviceFunctions->vkCmdDraw(cmdBuf, (*it)->mVertices.size(), 1, 0, 0);
     }
     mDeviceFunctions->vkCmdEndRenderPass(cmdBuf);
-    mObjects.at(1)->rotate(1.0f, 0.0f, 0.0f, 1.0f);
+    mObjects.at(1)->rotate(0.0f, 0.0f, 0.0f, 1.0f);
     //qDebug() << mObjects.at(1)->mMatrix;
     mWindow->frameReady();
     mWindow->requestUpdate(); // render continuously, throttled by the presentation rate

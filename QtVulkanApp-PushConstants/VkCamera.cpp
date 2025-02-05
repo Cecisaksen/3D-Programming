@@ -1,4 +1,7 @@
 #include "VkCamera.h"
+#include <QVector3D>
+#include <QtMath>
+#include <QMatrix4x4>
 
 VkCamera::VkCamera() {}
 
@@ -26,10 +29,13 @@ void VkCamera::lookAt(const QVector3D &eye, const QVector3D &at, const QVector3D
     mViewMatrix.lookAt(mEye, mAt, mUp);
 }
 
-
 void VkCamera::translate(float dx, float dy, float dz)
 {
-    mViewMatrix.translate(dx, dy, dz);
+
+    mEye += QVector3D(dx, dy, dz);
+    mAt += QVector3D(dx, dy, dz);
+    mViewMatrix.setToIdentity();
+    mViewMatrix.lookAt(mEye, mAt, mUp);
 }
 
 
@@ -37,3 +43,4 @@ QMatrix4x4 VkCamera::cMatrix()
 {
     return mProjectionMatrix * mViewMatrix;
 }
+

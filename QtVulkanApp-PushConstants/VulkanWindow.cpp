@@ -1,4 +1,5 @@
 #include "VulkanWindow.h"
+#include "VkCamera.h"
 #include "RenderWindow.h"
 #include <QKeyEvent>
 #include <QDebug>
@@ -36,31 +37,23 @@ void VulkanWindow::keyPressEvent(QKeyEvent *event)
 
     if(event->key() == Qt::Key_A)
     {
-        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(0.5f, 0.0f, 0.0f);
+        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(-0.5f, 0.0f, 0.0f);
     }
-
 
     if(event->key() == Qt::Key_D)
     {
-        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(-0.5f, 0.0f, 0.0f);
+        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(0.5f, 0.0f, 0.0f);
     }
 
     if(event->key() == Qt::Key_W)
     {
-        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, -0.5f, 0.0f);
+        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, 0.5f, 0.0f);
     }
 
     if(event->key() == Qt::Key_S)
     {
-        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, 0.5f, 0.0f);
+        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, -0.5f, 0.0f);
     }
-    if(event->key() == Qt::Key_Q)
-    {
-        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, 0.0f, -0.5f);
-    }
-    if(event->key() == Qt::Key_E)
-    {
-        dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(0.0f, 0.0f, 0.5f);
-    }
+
 
 }

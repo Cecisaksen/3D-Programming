@@ -1,40 +1,60 @@
-#include "Spiral.h"
+#include "spiral.h"
+#include "VisualObject.h"
+#include "Vertex.h"
 #include <cmath>
-#include <iostream>
+#include <fstream>
+#include <vector>
 
-// Constructor for the Spiral class
-Spiral::Spiral(float numLoops, float numPoints, float scale) : VisualObject()
+Spiral::Spiral() : VisualObject()
 {
-    generateSpiral(numLoops, numPoints, scale);
+    float t = 0.0f;           // Starting value of t
+    float t_step = 0.01f;     // Step size for t (smaller value for smoother curve)
+    float radius = 1.0f;      // Initial radius
 
-    // Optionally translate the spiral to a different position
-    mMatrix.translate(-0.25f, 0, 0);  // This is just an example of translation, feel free to adjust
-}
+    // Open the output file
+    std::ofstream outfile("SpiralData.txt");
 
-// Function to generate the vertices of the spiral
-void Spiral::generateSpiral(float numLoops, float numPoints, float scale)
-{
-    mVertices.clear();  // Clear any existing vertices
+    // Check if file is opened correctly
+    if (!outfile.is_open()) {
+        std::cerr << "Error opening file for writing." << std::endl;
+        return;
+    }
 
-    float t_step = 1.0f / numPoints;  // Step for parameter t
-    int count = 0;  // For debugging or any use case
+    int count = 0;
 
-    // Generate 3D spiral points: x = r*cos(t), y = r*sin(t), z = t
-    for (int i = 0; i < numPoints; ++i) {
-        float t = i * t_step;
-        float angle = 2 * M_PI * numLoops * t;
-        float x = scale * t * cos(angle);
-        float y = scale * t * sin(angle);
-        float z = scale * t;  // Z increases linearly with t to create the spiral
+    // Generate the vertices for the spiral
+    for (int i = 0; i < 1000; i++) {
+        // Calculate angle, which increases with t
+        float angle = 2 * M_PI * t;  // Full rotation every 2*pi
 
-        // Color vertices with alternating colors for visibility
-        float r = (i % 2 == 0) ? 1.0f : 0.5f;
-        float g = 0.0f;
-        float b = (i % 2 == 0) ? 0.0f : 1.0f;
+        // Calculate the x and y coordinates for the spiral's 2D circle
+        float x = radius * cos(angle);
+        float y = radius * sin(angle);
 
-        // Add the vertex to the mVertices array
-        mVertices.push_back(Vertex{x, y, z, r, g, b, 0.0f, 0.0f});
+        // Z-coordinate increases linearly with t for the upward movement of the spiral
+        float z = t;  // This creates the height of the spiral
 
+        // Write the vertex to the file
+        outfile << x << " " << y << " " << z << std::endl;
+
+        // Add the vertex to the list for later rendering
+        mVertices.push_back(Vertex{x, y, z, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}); // Using red color for simplicity
+
+        // Increment t and the radius to make the spiral grow outward
+        t += t_step;
+        radius += 0.001f;  // Gradual increase of radius for a smooth curve
         count++;
     }
+
+    // Optionally, write the count of data points at the beginning of the file
+    outfile.seekp(0, std::ios::beg);  // Go back to the start of the file
+    outfile << "Line count: " << count << std::endl;
+
+    // Close the output file
+    outfile.close();
+
+    // Optionally, log a message about the file creation
+    std::cout << "Spiral data written to SpiralData.txt" << std::endl;
+
+    mMatrix.translate(20.0f, 0.0f, 1.0f);
 }

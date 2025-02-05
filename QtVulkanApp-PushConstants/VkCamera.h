@@ -1,6 +1,7 @@
 #ifndef VKCAMERA_H
 #define VKCAMERA_H
 #include <QMatrix4x4>
+#include <QVector3D>
 class VkCamera
 {
 private:
@@ -23,8 +24,9 @@ public:
     void lookAt(const QVector3D& eye, const QVector3D& at, const QVector3D& up);
     //void update();
     void translate(float dx, float dy, float dz);
+    void rotate(float angle, float x, float y, float z); // Rotate the camera around a given axis
     QMatrix4x4 cMatrix();
+    QMatrix4x4 getViewMatrix();
 };
-
 
 #endif // VKCAMERA_H
