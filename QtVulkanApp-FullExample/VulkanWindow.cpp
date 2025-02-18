@@ -77,7 +77,7 @@ if (event->key() == Qt::Key_1)
         dynamic_cast<RenderWindow*>(mRenderWindow)->mObjects.at(mIndex)->scale(-1.0f);
     }
 
-    //**************** Camera control ***************** //
+    //****************************** Camera control ******************************* //
     if(event->key() == Qt::Key_Y)
     {
         dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, 0.0f, 0.2f);
@@ -113,8 +113,6 @@ if (event->key() == Qt::Key_1)
 
 
 }
-
-
 
 void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
 {
