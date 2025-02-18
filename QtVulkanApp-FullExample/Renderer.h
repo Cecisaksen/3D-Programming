@@ -1,15 +1,13 @@
-
-#ifndef RENDERWINDOW_H
-#define RENDERWINDOW_H
+#ifndef RENDERER_H
+#define RENDERER_H
 
 #include <QVulkanWindow>
 #include <vector>
-#include "Spiral.h"
-#include "VkTriangle.h"
-#include "VkTrianglesurface.h"
-#include "graph.h"
-#include "visualobject.h"
-#include "vkcamera.h"
+#include <unordered_map>
+#include "Camera.h"
+#include "Triangle.h"
+#include "TriangleSurface.h"
+#include "VisualObject.h"
 
 class RenderWindow : public QVulkanWindowRenderer
 {
@@ -39,14 +37,14 @@ public:
     void getVulkanHWInfo();
 
     std::vector<VisualObject*>& getObjects() { return mObjects; }
-
+    std::unordered_map<std::string, VisualObject*>& getMap() { return mMap; }
 
 protected:
 
     //Creates the Vulkan shader module from the precompiled shader files in .spv format
     VkShaderModule createShader(const QString &name);
 
-    void setModelMatrix(QMatrix4x4 modelMatrix);
+	void setModelMatrix(QMatrix4x4 modelMatrix);
 
     //The ModelViewProjection MVP matrix
     QMatrix4x4 mProjectionMatrix;
@@ -59,7 +57,7 @@ protected:
 
     VkDeviceMemory mBufferMemory{ VK_NULL_HANDLE };
     VkBuffer mBuffer{ VK_NULL_HANDLE };
-
+ 
     VkDescriptorPool mDescriptorPool{ VK_NULL_HANDLE };
     VkDescriptorSetLayout mDescriptorSetLayout{ VK_NULL_HANDLE };
     VkDescriptorSet mDescriptorSet[QVulkanWindow::MAX_CONCURRENT_FRAME_COUNT]{ VK_NULL_HANDLE };
@@ -67,15 +65,16 @@ protected:
     VkPipelineCache mPipelineCache{ VK_NULL_HANDLE };
     VkPipelineLayout mPipelineLayout{ VK_NULL_HANDLE };
     VkPipeline mPipeline{ VK_NULL_HANDLE };
+    VkPipelineLayout mPipelineLayout2{ VK_NULL_HANDLE };
+    VkPipeline mPipeline2{ VK_NULL_HANDLE };
 
 private:
     friend class VulkanWindow;
     VkTriangle mTriangle;
-    VKTriangleSurface mSurface;
+    VkTriangleSurface mSurface;
     VisualObject mVisualObject;
     std::vector<VisualObject*> mObjects;
-    QVulkanWindowRenderer* mRenderWindow;
-    int mIndex{0};
+    std::unordered_map<std::string, VisualObject*> mMap;    // alternativ container
 
     void createBuffer(VkDevice logicalDevice,
                       const VkDeviceSize uniAlign, VisualObject* visualObject,
@@ -83,7 +82,9 @@ private:
     //VkBuffer& buffer,
     //VkDeviceMemory& bufferMemory) ;
     VkCamera mCamera;
+    //VkDevice logicalDevice;
+    //VkPipelineInputAssemblyStateCreateInfo ia;
+    //VkGraphicsPipelineCreateInfo pipelineInfo;
 };
 
-
-#endif // RENDERWINDOW_H
+#endif // RENDERER_H

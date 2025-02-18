@@ -17,8 +17,10 @@ QVulkanWindowRenderer* VulkanWindow::createRenderer()
 }
 
 
-void VulkanWindow::keyPressEvent(QKeyEvent *event)
+void VulkanWindow::keyPressEvent(QKeyEvent *event){
 {
+    dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.rotate(45, 0.0f, 0.0f, 1.0f);
+}
 
     if (event->key() == Qt::Key_Escape)
     {
@@ -54,6 +56,8 @@ void VulkanWindow::keyPressEvent(QKeyEvent *event)
     {
         dynamic_cast<RenderWindow*>(mRenderWindow)->mCamera.translate(.0f, -0.5f, 0.0f);
     }
+
+
 
 
 }

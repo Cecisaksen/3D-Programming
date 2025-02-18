@@ -1,6 +1,6 @@
 #include "VKTriangleSurface.h"
-#include "Vertex.h"
-#include "VisualObject.h"
+#include "vertex.h"
+#include "visualobject.h"
 #include <fstream>
 
 VKTriangleSurface::VKTriangleSurface() : VisualObject()

@@ -3,7 +3,6 @@
 
 #include "VisualObject.h"
 #include "Vertex.h"
-#include <vector>
 
 class FunctionGraph : public VisualObject {
 public:

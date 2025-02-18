@@ -1,4 +1,4 @@
-#include "RenderWindow.h"
+#include "Renderer.h"
 #include <QVulkanFunctions>
 #include <QFile>
 
@@ -8,8 +8,11 @@ static inline VkDeviceSize aligned(VkDeviceSize v, VkDeviceSize byteAlign)
     return (v + byteAlign - 1) & ~(byteAlign - 1);
 }
 
+
+/*** RenderWindow class ***/
+
 RenderWindow::RenderWindow(QVulkanWindow *w, bool msaa)
-    : mWindow(w)
+	: mWindow(w)
 {
     if (msaa) {
         const QList<int> counts = w->supportedSampleCounts();
@@ -24,13 +27,22 @@ RenderWindow::RenderWindow(QVulkanWindow *w, bool msaa)
     }
 
     mObjects.push_back(new VkTriangle());
-    mObjects.push_back((new VKTriangleSurface()));
+    mObjects.push_back((new VkTriangleSurface()));
+    mObjects.at(0)->setName("triangle");
+    mObjects.at(1)->setName("Surf");
+    // **************************************
+    // Legger inn objekter i map
+    // **************************************
+    //std::string navn{"navn"}; // Skal VisualObject klassen få en navn-variabel?
+    for (auto it=mObjects.begin(); it!=mObjects.end(); it++)
+        mMap.insert(std::pair<std::string, VisualObject*>{(*it)->getName(),*it});
 }
 
 void RenderWindow::initResources()
 {
+    qDebug("\n ***************************** initResources ******************************************* \n");
+
     VkDevice logicalDevice = mWindow->device();
-    //logicalDevice = mWindow->device();
     mDeviceFunctions = mWindow->vulkanInstance()->deviceFunctions(logicalDevice);
 
     /* Prepare the vertex and uniform data.The vertex data will never
@@ -42,6 +54,7 @@ void RenderWindow::initResources()
     const VkDeviceSize uniAlign = pdevLimits->minUniformBufferOffsetAlignment;
     qDebug("uniform buffer offset alignment is %u", (uint)uniAlign);
 
+    /// Dag 240125:
     VkBufferCreateInfo bufferInfo{};
     memset(&bufferInfo, 0, sizeof(bufferInfo)); //Clear out the memory
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO; // Set the structure type
@@ -222,6 +235,12 @@ void RenderWindow::initResources()
 // This function is called at startup and when the app window is resized
 void RenderWindow::initSwapChainResources()
 {
+    qDebug("\n ***************************** initSwapChainResources ******************************************* \n");
+
+    // Projection matrix - how the scene will be projected into the render window
+
+    //This function is called at startup and when the app window is resized
+    mProjectionMatrix.setToIdentity();
     //find the size of the window
     const QSize sz = mWindow->swapChainImageSize();
 
@@ -231,7 +250,6 @@ void RenderWindow::initSwapChainResources()
 
 void RenderWindow::startNextFrame()
 {
-    VkDevice dev = mWindow->device();
     VkCommandBuffer cmdBuf = mWindow->currentCommandBuffer();
     const QSize sz = mWindow->swapChainImageSize();
     //qDebug() << "startNextFrame()";
@@ -280,6 +298,16 @@ void RenderWindow::startNextFrame()
         setModelMatrix(mCamera.cMatrix() * (*it)->mMatrix);
         mDeviceFunctions->vkCmdDraw(cmdBuf, (*it)->mVertices.size(), 1, 0, 0);
     }
+    // Alternativt draw kall ved å traversere unordered map
+    /*    for (auto it=mMap.begin(); it!=mMap.end(); it++)
+    {
+        // first er name, second er VisualObject*
+        auto p = (*it).second;
+        mDeviceFunctions->vkCmdBindVertexBuffers(cmdBuf, 0, 1, &p->mBuffer, &vbOffset);
+        setModelMatrix(mCamera.cMatrix() * p->mMatrix);
+        mDeviceFunctions->vkCmdDraw(cmdBuf, p->mVertices.size(), 1, 0, 0);
+    }
+*/
     mDeviceFunctions->vkCmdEndRenderPass(cmdBuf);
     mObjects.at(1)->rotate(0.0f, 0.0f, 0.0f, 1.0f);
     //qDebug() << mObjects.at(1)->mMatrix;
@@ -317,8 +345,8 @@ VkShaderModule RenderWindow::createShader(const QString &name)
 void RenderWindow::setModelMatrix(QMatrix4x4 modelMatrix)
 {
 
-    mDeviceFunctions->vkCmdPushConstants(mWindow->currentCommandBuffer(), mPipelineLayout,
-                                         VK_SHADER_STAGE_VERTEX_BIT, 0, 16 * sizeof(float), modelMatrix.constData());
+	mDeviceFunctions->vkCmdPushConstants(mWindow->currentCommandBuffer(), mPipelineLayout, 
+        VK_SHADER_STAGE_VERTEX_BIT, 0, 16 * sizeof(float), modelMatrix.constData());
 }
 
 // Dag 240125
@@ -474,18 +502,5 @@ void RenderWindow::releaseResources()
         }
 
     }
-    for (auto it=mObjects.begin(); it!=mObjects.end(); it++) {
-        if ((*it)->mBufferMemory) {
-            mDeviceFunctions->vkFreeMemory(dev, (*it)->mBufferMemory, nullptr);
-            (*it)->mBuffer = VK_NULL_HANDLE;
-        }
-
-    }
-    for (auto it=mObjects.begin(); it!=mObjects.end(); it++) {
-        if ((*it)->mBufferMemory) {
-            mDeviceFunctions->vkFreeMemory(dev, (*it)->mBufferMemory, nullptr);
-            (*it)->mBuffer = VK_NULL_HANDLE;
-        }
-
-    }
 }
+

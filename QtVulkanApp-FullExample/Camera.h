@@ -1,7 +1,7 @@
-#ifndef VKCAMERA_H
-#define VKCAMERA_H
+#ifndef CAMERA_H
+#define CAMERA_H
 #include <QMatrix4x4>
-#include <QVector3D>
+
 class VkCamera
 {
 private:
@@ -25,4 +25,4 @@ public:
     QMatrix4x4 cMatrix();
 };
 
-#endif // VKCAMERA_H
+#endif // CAMERA_H

@@ -1,10 +1,6 @@
-#include "VkCamera.h"
-#include <QVector3D>
-#include <QtMath>
-#include <QMatrix4x4>
+#include "Camera.h"
 
 VkCamera::VkCamera() {}
-
 
 void VkCamera::init()
 {
@@ -15,10 +11,8 @@ void VkCamera::perspective(int degrees, double aspect, double nearplane, double 
 {
     mProjectionMatrix.setToIdentity();
     mProjectionMatrix.perspective(degrees, aspect, nearplane, farplane);
-    //Flip projection because of Vulkan's -Y axis
     mProjectionMatrix.scale(1.0f, -1.0f, 1.0f);
 }
-
 
 void VkCamera::lookAt(const QVector3D &eye, const QVector3D &at, const QVector3D &up)
 {
@@ -33,7 +27,7 @@ void VkCamera::translate(float dx, float dy, float dz)
 {
     mViewMatrix.translate(dx, dy, dz);
     //Flip projection because of Vulkan's -Y axis
-    mViewMatrix.scale(1.0f, -1.0f, 1.0f);
+    // mViewMatrix.scale(1.0f, -1.0f, 1.0f);
 }
 
 void VkCamera::rotate(float t, float x, float y, float z)
@@ -41,9 +35,7 @@ void VkCamera::rotate(float t, float x, float y, float z)
     mViewMatrix.rotate(t,x,y,z);
 }
 
-
 QMatrix4x4 VkCamera::cMatrix()
 {
     return mProjectionMatrix * mViewMatrix;
 }
-

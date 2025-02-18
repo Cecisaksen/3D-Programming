@@ -1,6 +1,6 @@
 #include "spiral.h"
 #include "VisualObject.h"
-#include "Vertex.h"
+#include "vertex.h"
 #include <cmath>
 #include <fstream>
 #include <vector>
