@@ -113,7 +113,7 @@ void MainWindow::openFile() // slot
         //QString tekst;
         //loadFile(filnavn, tekst);
         //textEdit->setPlainText(tekst);
-        VkTriangleSurface* surf = new VkTriangleSurface(filnavn.toStdString());
+        TriangleSurface* surf = new TriangleSurface(filnavn.toStdString());
         auto rw = dynamic_cast<RenderWindow*>(mVulkanWindow->getRenderWindow());
         rw->getObjects().push_back(surf);
         rw->releaseResources();

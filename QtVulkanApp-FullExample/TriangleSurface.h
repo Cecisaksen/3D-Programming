@@ -3,13 +3,13 @@
 #include <string>
 #include "visualobject.h"
 
-class VkTriangleSurface : public VisualObject
+class TriangleSurface : public VisualObject
 {
 public:
     //std::vector<Vertex> mVertices;
     //std::vector<Vertex> getVertices() { return mVertices; }
-    VkTriangleSurface();
-    VkTriangleSurface(const std::string& filename);
+    TriangleSurface();
+    TriangleSurface(const std::string& filename);
 };
 
 #endif // TRIANGLESURFACE_H

@@ -1,31 +1,31 @@
 #include "TriangleSurface.h"
 #include <fstream>
 #include <QDebug>
-VkTriangleSurface::VkTriangleSurface() : VisualObject()
+TriangleSurface::TriangleSurface() : VisualObject()
 {
-    Vertex v1{0.0f,   0.0f,  0.0f,   1.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-    Vertex v2{1.0f,   0.0f,  0.0f,   0.0f, 1.0f, 0.0f, 0.0f, 0.0f};
-    Vertex v3{0.0f,   1.0f,  0.0f,   0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
-    Vertex v4{1.0f,   1.0f,  0.0f,   1.0f, 1.0f, 0.0f, 0.0f, 0.0f};
-    //    Vertex v1{0.0f,   0.0f,  0.0f,   1.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-    //    Vertex v2{1.0f,   0.0f,  0.0f,   0.0f, 1.0f, 0.0f, 0.0f, 0.0f};
-    //    Vertex v3{0.0f,   1.0f,  0.0f,   0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
-    //    Vertex v4{1.0f,   1.0f,  0.0f,   1.0f, 1.0f, 0.0f, 0.0f, 0.0f};
+    // Define vertices for a 1x1 square in the XZ-plane (Square, not rectangle)
+    Vertex v1{0.0f, 0.0f,  0.0f,  0.5f, 0.5f, 0.5f, 0.0f, 0.0f}; // Bottom-left
+    Vertex v2{1.0f, 0.0f,  0.0f,  0.5f, 0.5f, 0.5f, 0.0f, 0.0f}; // Bottom-right
+    Vertex v3{0.0f, 0.0f,  1.0f,  0.5f, 0.5f, 0.5f, 0.0f, 0.0f}; // Top-left
+    Vertex v4{1.0f, 0.0f,  1.0f,  0.5f, 0.5f, 0.5f, 0.0f, 0.0f}; // Top-right
 
-    //first
+    // First triangle (bottom-left, bottom-right, top-left)
     mVertices.push_back(v1);
     mVertices.push_back(v2);
     mVertices.push_back(v3);
-    //second
+
+    // Second triangle (top-left, bottom-right, top-right)
     mVertices.push_back(v3);
     mVertices.push_back(v2);
     mVertices.push_back(v4);
 
-    mMatrix.scale(0.5f);
-    mMatrix.translate(0.5f, 0.1, 0.1); // fra startNextFrame
+    mMatrix.scale(51.0f);
+
+    mMatrix.translate(0.0f, 0.0f, 0.0f);
 }
 
-VkTriangleSurface::VkTriangleSurface(const std::string &filename)
+
+TriangleSurface::TriangleSurface(const std::string &filename)
 {
     std::ifstream inn(filename);
     if (!inn.is_open())

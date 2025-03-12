@@ -1,6 +1,3 @@
-// Dag Nylund, Universitetet i Innlandet
-// Matematikk III 2025
-
 #include "Vertex.h"
 
 std::ostream& operator<< (std::ostream& os, const Vertex& v) {

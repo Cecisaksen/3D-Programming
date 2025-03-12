@@ -1,5 +1,8 @@
 #include "Renderer.h"
-#include "WorldAxis.h"
+#include "Door.h"
+#include "House.h"
+#include "Pickup.h"
+#include "NPC.h"
 #include <QVulkanFunctions>
 #include <QFile>
 
@@ -27,14 +30,61 @@ RenderWindow::RenderWindow(QVulkanWindow *w, bool msaa)
         }
     }
 
-    mObjects.push_back(new VkTriangle());
-    mObjects.push_back((new VkTriangleSurface()));
-    mObjects.at(0)->setName("triangle");
-    mObjects.at(1)->setName("Surf");
-    // **************************************
+    srand(static_cast<unsigned int>(time(0))); // generates my pickups randomly each time we run it
+
+
+        mPlayer = new Player();
+        mObjects.push_back(mPlayer);
+
+        for (int i = 0; i < 7; ++i)
+        {
+            mPickup.push_back(new Pickup());
+                // This will place pickups randomly on the XZ-plane (Hopefully)
+
+        }
+
+        for (int i = 0; i < mPickup.size(); i++)
+        {
+            mObjects.push_back(mPickup[i]);
+        }
+
+        mPlayer->pickupArr = mPickup;
+
+        inHouse = new Pickup();
+
+        mPlayer->inHousePickup = inHouse;
+
+        surfaceOne = new TriangleSurface();
+        surfaceTwo = new TriangleSurface();
+        door = new Door();
+
+        mPlayer->doorCopy = door;
+
+        mObjects2.push_back(mPlayer);
+        mObjects2.push_back(inHouse);
+        mObjects2.push_back(surfaceTwo);
+
+        mCamera.setStaticPosition();
+
+        // Create NPC 1 on the ground level, patrolling left to right
+        QVector3D start1(0.0f, 0.0f, 20.0f);  // Start point
+        QVector3D end1(50.0f, 0.0f, 20.0f);   // End point
+        NPCOne = new NPC(start1, end1);
+        mObjects.push_back(NPCOne);
+        mPlayer->NPCArr.push_back(NPCOne);
+
+        // Create NPC 2 elevated at a height of 10.0f, patrolling right to left
+        QVector3D start2(50.0f, 0.0f, 35.0f);  // Start point
+        QVector3D end2(0.0f, 0.0f, 35.0f);     // End point
+        NPCTwo = new NPC(start2, end2);
+        mObjects.push_back(NPCTwo);
+        mPlayer->NPCArr.push_back(NPCTwo);
+        mObjects.push_back(new House());
+        mObjects.push_back(door);
+        mObjects.push_back(surfaceOne);
+
+
     // Legger inn objekter i map
-    // **************************************
-    //std::string navn{"navn"}; // Skal VisualObject klassen få en navn-variabel?
     for (auto it=mObjects.begin(); it!=mObjects.end(); it++)
         mMap.insert(std::pair<std::string, VisualObject*>{(*it)->getName(),*it});
 }
@@ -251,10 +301,48 @@ void RenderWindow::initSwapChainResources()
 
 void RenderWindow::startNextFrame()
 {
+
     VkCommandBuffer cmdBuf = mWindow->currentCommandBuffer();
     const QSize sz = mWindow->swapChainImageSize();
     //qDebug() << "startNextFrame()";
     //Backtgound color of the render window - dark grey
+
+    if(doorTriggered == false)
+    {
+        NPCOne->doesExist = true;
+        NPCTwo->doesExist = true;
+        for (auto&obj : mObjects2)
+        {
+            obj->scale(0.0f);
+        }
+
+        for (auto&obj : mObjects) {
+            obj->update();
+
+        }
+
+        if(door->mIsOpen)
+        {
+            doorTriggered = true;
+        }
+
+    } else if (doorTriggered == true)
+    {
+        NPCOne->doesExist = false;
+        NPCTwo->doesExist = false;
+        for (auto&obj : mObjects) {
+            obj->scale(0.0f);
+
+        }
+
+        for (auto&obj : mObjects2)
+        {
+            obj->update();
+        }
+    }
+
+    QMatrix4x4 modelMatrix = mPlayer->getModelMatrix();
+
     VkClearColorValue clearColor = {{ 0.3, 0.3, 0.3, 1 }};
 
     VkClearDepthStencilValue clearDS = { 1, 0 };
@@ -299,6 +387,8 @@ void RenderWindow::startNextFrame()
         setModelMatrix(mCamera.cMatrix() * (*it)->mMatrix);
         mDeviceFunctions->vkCmdDraw(cmdBuf, (*it)->mVertices.size(), 1, 0, 0);
     }
+
+
     // Alternativt draw kall ved å traversere unordered map
     /*    for (auto it=mMap.begin(); it!=mMap.end(); it++)
     {

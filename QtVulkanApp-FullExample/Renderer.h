@@ -5,9 +5,11 @@
 #include <vector>
 #include <unordered_map>
 #include "Camera.h"
-#include "Triangle.h"
+#include "Player.h"
 #include "TriangleSurface.h"
 #include "VisualObject.h"
+
+class Pickup;
 
 class RenderWindow : public QVulkanWindowRenderer
 {
@@ -70,10 +72,24 @@ protected:
 
 private:
     friend class VulkanWindow;
-    VkTriangle mTriangle;
-    VkTriangleSurface mSurface;
+    Player* mPlayer;
+    TriangleSurface mSurface;
     VisualObject mVisualObject;
     std::vector<VisualObject*> mObjects;
+    std::vector<VisualObject*> mObjects2;
+
+    Pickup* inHouse;
+    TriangleSurface* surfaceOne;
+    TriangleSurface* surfaceTwo;
+
+    NPC* NPCOne;
+    NPC* NPCTwo;
+
+    class Door* door;
+
+    std::vector<Pickup*> mPickup;
+    bool doorTriggered = false;
+
     std::unordered_map<std::string, VisualObject*> mMap;    // alternativ container
 
     void createBuffer(VkDevice logicalDevice,
@@ -81,7 +97,7 @@ private:
                       VkBufferUsageFlags usage=VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
     //VkBuffer& buffer,
     //VkDeviceMemory& bufferMemory) ;
-    VkCamera mCamera;
+    Camera mCamera;
     //VkDevice logicalDevice;
     //VkPipelineInputAssemblyStateCreateInfo ia;
     //VkGraphicsPipelineCreateInfo pipelineInfo;
