@@ -76,11 +76,14 @@ void Pickup::CollectCollision(Player* player)
 
 void Pickup::collect()
 {
-    if (!mCollected)
-    {
+
+    if (!mCollected) {
         mCollected = true;
         sCollectedCount++;
         qDebug() << "Player picked up" << sCollectedCount << "/7 pickups";
+        if (sCollectedCount == 7) {
+            qDebug() << "YOU WIN";
+        }
     }
 }
 

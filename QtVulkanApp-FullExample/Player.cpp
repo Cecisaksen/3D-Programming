@@ -37,7 +37,7 @@ void Player::move(float dx, float dz) {
     mPosition.setZ(mPosition.z() + dz * moveSpeed);
 
     // Log the position to check if it's being updated
-    qDebug() << "Player Position: " << mPosition;
+   // qDebug() << "Player Position: " << mPosition;
 }
 
 void Player::update() {
