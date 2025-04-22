@@ -94,9 +94,6 @@ void HeightMap::makeTerrain(unsigned char* textureData, int widthIn, int heightI
         }
     }
 
-    qDebug() << "Number of vertices:" << mVertices.size();
-    qDebug() << "Number of indices:" << mIndices.size();
- 
 	//Calculating the normals for the mesh
     //Function not made yet:
     //calculateHeighMapNormals();
