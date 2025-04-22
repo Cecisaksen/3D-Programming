@@ -66,14 +66,14 @@ RenderWindow::RenderWindow(QVulkanWindow *w, bool msaa)
 
         mCamera.setStaticPosition();
 
-        // Create NPC 1 on the ground level, patrolling left to right
+        // NPC 1
         QVector3D start1(0.0f, 0.0f, 20.0f);  // Start point
         QVector3D end1(50.0f, 0.0f, 20.0f);   // End point
         NPCOne = new NPC(start1, end1);
         mObjects.push_back(NPCOne);
         mPlayer->NPCArr.push_back(NPCOne);
 
-        // Create NPC 2 elevated at a height of 10.0f, patrolling right to left
+        // NPC 2
         QVector3D start2(50.0f, 0.0f, 35.0f);  // Start point
         QVector3D end2(0.0f, 0.0f, 35.0f);     // End point
         NPCTwo = new NPC(start2, end2);
@@ -313,7 +313,7 @@ void RenderWindow::startNextFrame()
         NPCTwo->doesExist = true;
         for (auto&obj : mObjects2)
         {
-            obj->scale(0.0f);
+            obj->scale(0);
         }
 
         for (auto&obj : mObjects) {
@@ -330,6 +330,8 @@ void RenderWindow::startNextFrame()
     {
         NPCOne->doesExist = false;
         NPCTwo->doesExist = false;
+
+
         for (auto&obj : mObjects) {
             obj->scale(0.0f);
 
@@ -339,6 +341,8 @@ void RenderWindow::startNextFrame()
         {
             obj->update();
         }
+
+
     }
 
     QMatrix4x4 modelMatrix = mPlayer->getModelMatrix();
@@ -381,11 +385,23 @@ void RenderWindow::startNextFrame()
     mDeviceFunctions->vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
 
     /********************************* Our draw call!: *********************************/
-    for (auto it=mObjects.begin(); it!=mObjects.end(); it++)
+    if (doorTriggered == false)
     {
-        mDeviceFunctions->vkCmdBindVertexBuffers(cmdBuf, 0, 1, &(*it)->mBuffer, &vbOffset);
-        setModelMatrix(mCamera.cMatrix() * (*it)->mMatrix);
-        mDeviceFunctions->vkCmdDraw(cmdBuf, (*it)->mVertices.size(), 1, 0, 0);
+        for (auto it=mObjects.begin(); it!=mObjects.end(); it++)
+        {
+            mDeviceFunctions->vkCmdBindVertexBuffers(cmdBuf, 0, 1, &(*it)->mBuffer, &vbOffset);
+            setModelMatrix(mCamera.cMatrix() * (*it)->mMatrix);
+            mDeviceFunctions->vkCmdDraw(cmdBuf, (*it)->mVertices.size(), 1, 0, 0);
+        }
+    }
+    else
+    {
+        for (auto it=mObjects2.begin(); it!=mObjects2.end(); it++)
+        {
+            mDeviceFunctions->vkCmdBindVertexBuffers(cmdBuf, 0, 1, &(*it)->mBuffer, &vbOffset);
+            setModelMatrix(mCamera.cMatrix() * (*it)->mMatrix);
+            mDeviceFunctions->vkCmdDraw(cmdBuf, (*it)->mVertices.size(), 1, 0, 0);
+        }
     }
 
 

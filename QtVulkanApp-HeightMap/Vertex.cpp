@@ -16,6 +16,7 @@ std::istream& operator>> (std::istream& is, Vertex& v) {
     return is;
 }
 
+
 Vertex::Vertex(QVector3D pos, QVector3D normal, QVector2D uv)
 {
     x = pos.x();
@@ -27,4 +28,3 @@ Vertex::Vertex(QVector3D pos, QVector3D normal, QVector2D uv)
     u = uv.x();
     v = uv.y();
 }
-

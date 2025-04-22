@@ -30,8 +30,6 @@ void VulkanWindow::keyPressEvent(QKeyEvent *event)
     }
 
 
-
-
     // Cast mRenderWindow to RenderWindow* to access mPlayer
     RenderWindow* renderWindow = dynamic_cast<RenderWindow*>(mRenderWindow);
     if (renderWindow) {
@@ -48,7 +46,7 @@ void VulkanWindow::keyPressEvent(QKeyEvent *event)
             renderWindow->mPlayer->move(-1, 0.0f);  // Move player right
         }
 
-        renderWindow->mPlayer->update();  // Ensure the player's transformation is applied
+        renderWindow->mPlayer->update();
     } else {
         qDebug() << "RenderWindow cast failed!";
     }

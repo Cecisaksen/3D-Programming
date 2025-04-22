@@ -2,7 +2,6 @@
 #include "Player.h"  // Needed for accessing Player::getPosition()
 #include <QDebug>
 #include <cstdlib>
-#include <cmath>
 
 int Pickup::sCollectedCount = 0;
 
