@@ -11,26 +11,26 @@ HeightMap::HeightMap() : VisualObject()
     drawType=0;
 }
 
-float HeightMap::GetHeight(float x, float z)
-{
-    QVector3D  cartesianToBarycentric2(QVector2D p, QVector2D a, QVector2D b, QVector2D c)
-    {
-        QVector2D v0 = { b.x - a.x, b.y - a.y };
-        QVector2D v1 = { c.x - a.x, c.y - a.y };
-        QVector2D v2 = { p.x - a.x, p.y - a.y };
-        float d00 = QVector2D::dotProduct(v0, v0);
-        float d01 = QVector2D::dotProduct(v0, v1);
-        float d11 = QVector2D::dotProduct(v1, v1);
-        float d20 = QVector2D::dotProduct(v2, v0);
-        float d21 = QVector2D::dotProduct(v2, v1);
-        float denom = d00 * d11 - d01 * d01;
-        float alpha = (d11 * d20 - d01 * d21) / denom;
-        float beta = (d00 * d21 - d01 * d20) / denom;
-        float gamma = 1.0f - alpha - beta;
-        return QVector3D( alpha, beta, gamma );
-    }
+//float HeightMap::GetHeight(float x, float z)
+//{
+    //QVector3D  cartesianToBarycentric2(QVector2D p, QVector2D a, QVector2D b, QVector2D c)
+    //{
+        //QVector2D v0 = { b.x - a.x, b.y - a.y };
+        //QVector2D v1 = { c.x - a.x, c.y - a.y };
+        //QVector2D v2 = { p.x - a.x, p.y - a.y };
+        //float d00 = QVector2D::dotProduct(v0, v0);
+        //float d01 = QVector2D::dotProduct(v0, v1);
+        //float d11 = QVector2D::dotProduct(v1, v1);
+        //float d20 = QVector2D::dotProduct(v2, v0);
+        //float d21 = QVector2D::dotProduct(v2, v1);
+       // float denom = d00 * d11 - d01 * d01;
+      //  float alpha = (d11 * d20 - d01 * d21) / denom;
+      //  float beta = (d00 * d21 - d01 * d20) / denom;
+      //  float gamma = 1.0f - alpha - beta;
+     //   return QVector3D( alpha, beta, gamma );
+    //}
 
-}
+//}
 
 void HeightMap::makeTerrain(std::string heightMapImage)
 {
