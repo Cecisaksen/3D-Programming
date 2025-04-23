@@ -8,15 +8,13 @@ class HeightMap : public VisualObject
 {
 public:
     HeightMap();
+    float GetHeight(float x, float z);
 
     void makeTerrain(std::string heightMapImage);
 
-    void makeTerrain(unsigned char* textureData, int width, int height);
-
 private:
-	int mWidth{ 0 };
-	int mHeight{ 0 };
-	int mChannels{ 0 };
+
+    QImage Image;
 };
 
 #endif // HEIGHTMAP_H

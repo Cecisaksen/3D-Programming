@@ -2,22 +2,23 @@
 #include <QVulkanFunctions>
 #include <QFile>
 #include <fstream>
-#include "Pickup.h"
+#include "HeightMap.h"
+#include "ObjMesh.h"
 #include "Player.h"
 #include "VulkanWindow.h"
 #include "WorldAxis.h"
 #include "TriangleSurface.h"
-#include "HeightMap.h"
 #include "stb_image.h"
-#include "Renderer.h"
 #include "Door.h"
 #include "House.h"
+#include "Pickup.h"
 #include "NPC.h"
-#include <QVulkanFunctions>
-#include <QFile>
+#include "Camera.h"
+
+
 
 /*** Renderer class ***/
-Renderer::Renderer(QVulkanWindow *w, bool msaa)
+RenderWindow::RenderWindow(QVulkanWindow *w, bool msaa)
     : mWindow(w)
 {
     if (msaa) {
@@ -31,72 +32,65 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa)
             }
         }
     }
+    mObjects.push_back(new HeightMap());
 
-    mObjects.push_back((new WorldAxis()));
-    //mObjects.push_back(new HeightMap());
+    //<HeightMap*>(mObjects.at(3))->makeTerrain("../../Assets/Hund.bmp");
 
-    //static_cast<HeightMap*>(mObjects.at(3))->makeTerrain("../../Assets/Hund.bmp");
-
+    srand(static_cast<unsigned int>(time(0)));
     mPlayer = new Player();
     mObjects.push_back(mPlayer);
 
+
     for (int i = 0; i < 7; ++i)
-    {
         mPickup.push_back(new Pickup());
-            // This will place pickups randomly on the XZ-plane (Hopefully)
-
-    }
-
     for (int i = 0; i < mPickup.size(); i++)
-    {
         mObjects.push_back(mPickup[i]);
-    }
 
     mPlayer->pickupArr = mPickup;
-
     inHouse = new Pickup();
-
     mPlayer->inHousePickup = inHouse;
-
     surfaceOne = new TriangleSurface();
     surfaceTwo = new TriangleSurface();
     door = new Door();
-
     mPlayer->doorCopy = door;
 
     mObjects2.push_back(mPlayer);
     mObjects2.push_back(inHouse);
     mObjects2.push_back(surfaceTwo);
 
-
-
-    // NPC 1
-    QVector3D start1(0.0f, 0.0f, 20.0f);  // Start point
-    QVector3D end1(50.0f, 0.0f, 20.0f);   // End point
+    //npc 1
+    QVector3D start1(0.0f, 0.0f, 20.0f);
+    QVector3D end1(50.0f, 0.0f, 20.0f);
     NPCOne = new NPC(start1, end1);
     mObjects.push_back(NPCOne);
     mPlayer->NPCArr.push_back(NPCOne);
 
-    // NPC 2
-    QVector3D start2(50.0f, 0.0f, 35.0f);  // Start point
-    QVector3D end2(0.0f, 0.0f, 35.0f);     // End point
+    //npc 2
+    QVector3D start2(50.0f, 0.0f, 35.0f);
+    QVector3D end2(0.0f, 0.0f, 35.0f);
     NPCTwo = new NPC(start2, end2);
     mObjects.push_back(NPCTwo);
     mPlayer->NPCArr.push_back(NPCTwo);
+
+
     mObjects.push_back(new House());
-    mObjects.push_back(door);
-    mObjects.push_back(surfaceOne);
+    mObjects.push_back(new Door);
+    //mObjects.push_back(new TriangleSurface);
+    mObjects.push_back((new ObjMesh("suzanne.obj")));
 
+    //Inital position of the camera
+    mCamera.setPosition(QVector3D(-25.f, 50.0f, -25.f));
 
-    // Legger inn objekter i map
-    for (auto it=mObjects.begin(); it!=mObjects.end(); it++)
-        mMap.insert(std::pair<std::string, VisualObject*>{(*it)->getName(),*it});
+    mCamera.pitch(-90);
+
+    for (auto it = mObjects.begin(); it != mObjects.end(); ++it)
+        mMap.insert({ (*it)->getName(), *it });
+
+    mVulkanWindow = dynamic_cast<VulkanWindow*>(w);
 }
 
-
-
 //Automatically called by Qt on Renderer startup
-void Renderer::initResources()
+void RenderWindow::initResources()
 {
     qDebug("\n ***************************** initResources ******************************************* \n");
 
@@ -187,42 +181,49 @@ void Renderer::initResources()
 
     /********************************* Create shaders *********************************/
     //Creates our actual shader modules
-    VkShaderModule vertShaderModule = createShader(QStringLiteral(":/texture_vert.spv"));
-    VkShaderModule fragShaderModule = createShader(QStringLiteral(":/texture_frag.spv"));
+    mColorMaterial texture;
+    colorMaterialMap.try_emplace("texture", texture);
+    (&colorMaterialMap.find("texture")->second)->vertShaderModule = createShader(QStringLiteral(":/texture_vert.spv"));
+    (&colorMaterialMap.find("texture")->second)->fragShaderModule = createShader(QStringLiteral(":/texture_frag.spv"));
 
     //Updated to more common way to write it:
     VkPipelineShaderStageCreateInfo vertShaderCreateInfoT{};
     vertShaderCreateInfoT.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderCreateInfoT.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderCreateInfoT.module = vertShaderModule;
+    vertShaderCreateInfoT.module = (&colorMaterialMap.find("texture")->second)->vertShaderModule;
     vertShaderCreateInfoT.pName = "main";                // start function in shader
 
     VkPipelineShaderStageCreateInfo fragShaderCreateInfoT{};
     fragShaderCreateInfoT.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragShaderCreateInfoT.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderCreateInfoT.module = fragShaderModule;
+    fragShaderCreateInfoT.module = (&colorMaterialMap.find("texture")->second)->fragShaderModule;
     fragShaderCreateInfoT.pName = "main";                // start function in shader
 
     VkPipelineShaderStageCreateInfo shaderStagesT[] = { vertShaderCreateInfoT, fragShaderCreateInfoT };
 
     /*************** ColorMaterial ******************/
-    mColorMaterial.vertShaderModule = createShader(QStringLiteral(":/color_vert.spv"));
-    mColorMaterial.fragShaderModule = createShader(QStringLiteral(":/color_frag.spv"));
+    mColorMaterial line;
+    colorMaterialMap.try_emplace("line", line);
+    ;
+    (&colorMaterialMap.find("line")->second)->vertShaderModule = createShader(QStringLiteral(":/color_vert.spv"));
+    (&colorMaterialMap.find("line")->second)->fragShaderModule = createShader(QStringLiteral(":/color_frag.spv"));
 
     //Updated to more common way to write it:
     VkPipelineShaderStageCreateInfo vertShaderCreateInfoC{};
     vertShaderCreateInfoC.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderCreateInfoC.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderCreateInfoC.module = mColorMaterial.vertShaderModule;
+    vertShaderCreateInfoC.module = (&colorMaterialMap.find("line")->second)->vertShaderModule;
     vertShaderCreateInfoC.pName = "main";                // start function in shader
 
     VkPipelineShaderStageCreateInfo fragShaderCreateInfoC{};
     fragShaderCreateInfoC.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragShaderCreateInfoC.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderCreateInfoC.module = mColorMaterial.fragShaderModule;
+    fragShaderCreateInfoC.module = (&colorMaterialMap.find("line")->second)->fragShaderModule;
     fragShaderCreateInfoC.pName = "main";                // start function in shader
 
     VkPipelineShaderStageCreateInfo shaderStagesC[] = { vertShaderCreateInfoC, fragShaderCreateInfoC };
+
+
 
     /*********************** Graphics pipeline ********************************/
     VkGraphicsPipelineCreateInfo pipelineInfo{};    //Will use this variable a lot in the next 100s of lines
@@ -293,31 +294,51 @@ void Renderer::initResources()
     pipelineInfo.layout = mPipelineLayout;
     pipelineInfo.renderPass = mWindow->defaultRenderPass();
 
-    result = mDeviceFunctions->vkCreateGraphicsPipelines(logicalDevice, mPipelineCache, 1, &pipelineInfo, nullptr, &mPipeline1);
+    result = mDeviceFunctions->vkCreateGraphicsPipelines(logicalDevice, mPipelineCache, 1, &pipelineInfo, nullptr, &(&colorMaterialMap.find("texture")->second)->pipeline);
     if (result != VK_SUCCESS)
         qFatal("Failed to create graphics pipeline: %d", result);
 
     //Making a pipeline for drawing lines
-    mColorMaterial.pipeline = mPipeline1;                       // reusing most of the settings from the first pipeline
+    (&colorMaterialMap.find("line")->second)->pipeline = (&colorMaterialMap.find("texture")->second)->pipeline;                       // reusing most of the settings from the first pipeline
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;   // draw lines
     rasterization.polygonMode = VK_POLYGON_MODE_FILL;           // VK_POLYGON_MODE_LINE will make a wireframe; VK_POLYGON_MODE_FILL
     rasterization.lineWidth = 5.0f;
     pipelineInfo.pInputAssemblyState = &inputAssembly;
     pipelineInfo.pStages = shaderStagesC;
-    result = mDeviceFunctions->vkCreateGraphicsPipelines(logicalDevice, mPipelineCache, 1, &pipelineInfo, nullptr, &mColorMaterial.pipeline);
+    result = mDeviceFunctions->vkCreateGraphicsPipelines(logicalDevice, mPipelineCache, 1, &pipelineInfo, nullptr, &(&colorMaterialMap.find("line")->second)->pipeline);
+    if (result != VK_SUCCESS)
+        qFatal("Failed to create graphics pipeline: %d", result);
+
+
+
+
+    //making pipeline for colour material
+    colorMaterialMap.emplace("color", colorMaterialMap.find("line")->second); // making a index for color
+
+    (&colorMaterialMap.find("color")->second)->pipeline = (&colorMaterialMap.find("line")->second)->pipeline;                       // reusing most of the settings from the first pipeline
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;   // draw lines
+    rasterization.polygonMode = VK_POLYGON_MODE_FILL;           // VK_POLYGON_MODE_LINE will make a wireframe; VK_POLYGON_MODE_FILL
+    rasterization.lineWidth = 5.0f;
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pStages = shaderStagesC;
+    result = mDeviceFunctions->vkCreateGraphicsPipelines(logicalDevice, mPipelineCache, 1, &pipelineInfo, nullptr, &(&colorMaterialMap.find("color")->second)->pipeline);
     if (result != VK_SUCCESS)
         qFatal("Failed to create graphics pipeline: %d", result);
 
 
     // Destroying the shader modules, we won't need them anymore after the pipeline is created
-    if (vertShaderModule)
-        mDeviceFunctions->vkDestroyShaderModule(logicalDevice, vertShaderModule, nullptr);
-    if (fragShaderModule)
-        mDeviceFunctions->vkDestroyShaderModule(logicalDevice, fragShaderModule, nullptr);
-    if (mColorMaterial.vertShaderModule)
-        mDeviceFunctions->vkDestroyShaderModule(logicalDevice, mColorMaterial.vertShaderModule, nullptr);
-    if (mColorMaterial.fragShaderModule)
-        mDeviceFunctions->vkDestroyShaderModule(logicalDevice, mColorMaterial.fragShaderModule, nullptr);
+    if ((&colorMaterialMap.find("texture")->second)->vertShaderModule)
+        mDeviceFunctions->vkDestroyShaderModule(logicalDevice, (&colorMaterialMap.find("texture")->second)->vertShaderModule, nullptr);
+    if ((&colorMaterialMap.find("texture")->second)->fragShaderModule)
+        mDeviceFunctions->vkDestroyShaderModule(logicalDevice, (&colorMaterialMap.find("texture")->second)->fragShaderModule, nullptr);
+    if ((&colorMaterialMap.find("line")->second)->vertShaderModule)
+        mDeviceFunctions->vkDestroyShaderModule(logicalDevice, (&colorMaterialMap.find("line")->second)->vertShaderModule, nullptr);
+    if ((&colorMaterialMap.find("line")->second)->fragShaderModule)
+        mDeviceFunctions->vkDestroyShaderModule(logicalDevice, (&colorMaterialMap.find("line")->second)->fragShaderModule, nullptr);
+    if ((&colorMaterialMap.find("color")->second)->vertShaderModule)
+        mDeviceFunctions->vkDestroyShaderModule(logicalDevice, (&colorMaterialMap.find("color")->second)->vertShaderModule, nullptr);
+    if ((&colorMaterialMap.find("color")->second)->fragShaderModule)
+        mDeviceFunctions->vkDestroyShaderModule(logicalDevice, (&colorMaterialMap.find("color")->second)->fragShaderModule, nullptr);
 
     // Create the uniform buffer
     createUniformBuffer();
@@ -327,31 +348,94 @@ void Renderer::initResources()
     // Create the texture sampler
     createTextureSampler();
 
-    mTextureHandle = createTexture("../../Assets/Hund.bmp"); //Heightmap.jpg HundA.bmp
+    for(VisualObject* o : mObjects) {
+        //TODO change texture to different string
+        //std::string texturePath = o->GetTexture();
+        std::string texturePath = "../../Assets/Heightmap.jpg";
+
+        //is texture present?
+        if(mTextureMap.find(texturePath)!=mTextureMap.end()) {
+            continue; //yes, go next
+        }
+
+        TextureHandle texture = createTexture(texturePath.c_str());
+        mTextureMap.try_emplace(texturePath, texture);
+    }
+    //mTextureHandle = createTexture("../../Assets/Heightmap.jpg"); //Heightmap.jpg HundA.bmp
+    //mTextureHandle = createTexture("../../Assets/HundA.bmp"); //Heightmap.jpg HundA.bmp
+    //mTextureHandle = createTexture("../../Assets/Boop.jpg");
 
     // getVulkanHWInfo(); // if you want to get info about the Vulkan hardware
 }
 
 // This function is called at startup, and when the app window is resized
-void Renderer::initSwapChainResources()
+void RenderWindow::initSwapChainResources()
 {
     qDebug("\n ***************************** initSwapChainResources ******************************************* \n");
 
     // Projection matrix - how the scene will be projected into the render window
     // has to be updated when the window is resized
-    // mProjectionMatrix.setToIdentity();
+    //mProjectionMatrix.setToIdentity();
 
     //can be used to correct for coordinate system differences between OpenGL and Vulkan:
     //QMatrix4x4 QVulkanWindow::clipCorrectionMatrix()
 
     //find the size of the window
     const QSize sz = mWindow->swapChainImageSize();
-
     mCamera.perspective(45.0f, sz.width() / (float) sz.height(), 0.01f, 500.0f);
+
 }
 
-void Renderer::startNextFrame()
+void RenderWindow::startNextFrame()
 {
+    //Handeling input from keyboard and mouse is done in VulkanWindow
+    //Has to be done each frame to get smooth movement
+
+    mVulkanWindow->handleInput();
+    mCamera.update();               //input can have moved the camera
+
+    VkCommandBuffer cmdBuf = mWindow->currentCommandBuffer();
+    const QSize sz = mWindow->swapChainImageSize();
+
+
+    if(doorTriggered == false)
+    {
+        NPCOne->doesExist = true;
+        NPCTwo->doesExist = true;
+        for (auto&obj : mObjects2)
+        {
+            obj->scale(0);
+        }
+
+        for (auto&obj : mObjects) {
+            obj->update();
+
+        }
+
+        if(door->mIsOpen)
+        {
+            doorTriggered = true;
+        }
+
+    } else if (doorTriggered == true)
+    {
+        NPCOne->doesExist = false;
+        NPCTwo->doesExist = false;
+
+
+        for (auto&obj : mObjects) {
+            obj->update();
+
+        }
+
+        for (auto&obj : mObjects2)
+        {
+            obj->scale(0);
+        }
+
+
+    }
+
     //Handeling input from keyboard and mouse is done in VulkanWindow
     //Has to be done each frame to get smooth movement
     mVulkanWindow->handleInput();
@@ -368,20 +452,36 @@ void Renderer::startNextFrame()
 
     setViewProjectionMatrix();   //Update the view and projection matrix in the Uniform
 
+
+
     /********************************* Our draw call!: *********************************/
     for (std::vector<VisualObject*>::iterator it=mObjects.begin(); it!=mObjects.end(); it++)
     {
         //Draw type
-        if ((*it)->getDrawType() == 0)
-            mDeviceFunctions->vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline1);
-        else
-            mDeviceFunctions->vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mColorMaterial.pipeline);
+        switch((*it)->getDrawType()) {
+        case 0:
+            mDeviceFunctions->vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, colorMaterialMap.at("texture").pipeline);
+            break;
+        case 1:
+            mDeviceFunctions->vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, colorMaterialMap.at("color").pipeline);
+            break;
+        default:
+            mDeviceFunctions->vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, colorMaterialMap.at("line").pipeline);
+            break;
+        }
+
+        // if ((*it)->getDrawType() == 0)
+        //           mDeviceFunctions->vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, colorMaterialMap.at("texture").pipeline);
+        // else
+        //           mDeviceFunctions->vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, colorMaterialMap.at("line").pipeline);
 
         QMatrix4x4 mvp = mCamera.projectionMatrix() * mCamera.viewMatrix() * (*it)->getMatrix();
         setModelMatrix((*it)->getMatrix()); //mvp);
 
         // Bind the texture descriptor set
-        setTexture(mTextureHandle, commandBuffer);
+        //TOTO refer to map
+        TextureHandle texture = mTextureMap.at("../../Assets/Heightmap.jpg");
+        setTexture(texture, commandBuffer);
 
         mDeviceFunctions->vkCmdBindVertexBuffers(commandBuffer, 0, 1, &(*it)->getVBuffer(), &vbOffset);
         //Check if we have an index buffer - if so, use Indexed draw
@@ -397,14 +497,11 @@ void Renderer::startNextFrame()
 
     mDeviceFunctions->vkCmdEndRenderPass(commandBuffer);
 
-    //Hardcoded!!!
-    mObjects.at(1)->rotate(1.0f, 0.0f, 0.0f, 1.0f);
-
     mWindow->frameReady();
     mWindow->requestUpdate(); // render continuously, throttled by the presentation rate
 }
 
-VkShaderModule Renderer::createShader(const QString &name)
+VkShaderModule RenderWindow::createShader(const QString &name)
 {
     //This uses Qt's own file opening and resource system
     //We probably will replace it with pure C++ when expanding the program
@@ -430,13 +527,13 @@ VkShaderModule Renderer::createShader(const QString &name)
     return shaderModule;
 }
 
-void Renderer::setModelMatrix(QMatrix4x4 modelMatrix)
+void RenderWindow::setModelMatrix(QMatrix4x4 modelMatrix)
 {
     mDeviceFunctions->vkCmdPushConstants(mWindow->currentCommandBuffer(), mPipelineLayout,
                                          VK_SHADER_STAGE_VERTEX_BIT, 0, 16 * sizeof(float), modelMatrix.constData());    //Column-major matrix
 }
 
-void Renderer::setViewProjectionMatrix()
+void RenderWindow::setViewProjectionMatrix()
 {
     memcpy(mUniformBufferLocation, mCamera.viewMatrix().constData(), 64);
     QMatrix4x4 temp = mCamera.projectionMatrix();
@@ -462,15 +559,16 @@ void Renderer::setViewProjectionMatrix()
     //memcpy(p + 128 + 32, mnp + 6, 12);
 }
 
-void Renderer::setTexture(TextureHandle& textureHandle, VkCommandBuffer commandBuffer)
+void RenderWindow::setTexture(TextureHandle& textureHandle, VkCommandBuffer commandBuffer)
 {
     mDeviceFunctions->vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                               mPipelineLayout, 1, 1, &textureHandle.mTextureDescriptorSet, 0, nullptr);
 }
 
-void Renderer::setRenderPassParameters(VkCommandBuffer commandBuffer)
+void RenderWindow::setRenderPassParameters(VkCommandBuffer commandBuffer)
 {
-    const QSize swapChainImageSize = mWindow->swapChainImageSize();
+
+    const QSize sz = mWindow->swapChainImageSize();
 
     //Backtgound color of the render window - dark grey
     VkClearColorValue clearColor = { { 0.3, 0.3, 0.3, 1 } };
@@ -480,21 +578,21 @@ void Renderer::setRenderPassParameters(VkCommandBuffer commandBuffer)
     clearValues[0].color = clearValues[2].color = clearColor;
     clearValues[1].depthStencil = clearDepthStencil;
 
-    VkRenderPassBeginInfo renderPassBeginInfo{};
-    renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassBeginInfo.renderPass = mWindow->defaultRenderPass();
-    renderPassBeginInfo.framebuffer = mWindow->currentFramebuffer();
-    renderPassBeginInfo.renderArea.extent.width = swapChainImageSize.width();
-    renderPassBeginInfo.renderArea.extent.height = swapChainImageSize.height();
-    renderPassBeginInfo.clearValueCount = mWindow->sampleCountFlagBits() > VK_SAMPLE_COUNT_1_BIT ? 3 : 2;
-    renderPassBeginInfo.pClearValues = clearValues;
-    mDeviceFunctions->vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+    VkRenderPassBeginInfo rpBeginInfo{};
+    rpBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    rpBeginInfo.renderPass = mWindow->defaultRenderPass();
+    rpBeginInfo.framebuffer = mWindow->currentFramebuffer();
+    rpBeginInfo.renderArea.extent.width = sz.width();
+    rpBeginInfo.renderArea.extent.height = sz.height();
+    rpBeginInfo.clearValueCount = mWindow->sampleCountFlagBits() > VK_SAMPLE_COUNT_1_BIT ? 3 : 2;
+    rpBeginInfo.pClearValues = clearValues;
+    mDeviceFunctions->vkCmdBeginRenderPass(commandBuffer, &rpBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     //Viewport - area of the image to render to, usually (0,0) to (width, height)
     VkViewport viewport{};
     viewport.x = viewport.y = 0.f;
-    viewport.width = swapChainImageSize.width();
-    viewport.height = swapChainImageSize.height();
+    viewport.width = sz.width();
+    viewport.height = sz.height();
     viewport.minDepth = 0.f;                //min framebuffer depth
     viewport.maxDepth = 1.f;                //max framebuffer depth
     mDeviceFunctions->vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
@@ -512,8 +610,8 @@ void Renderer::setRenderPassParameters(VkCommandBuffer commandBuffer)
 // If we want to have more objects, we need to initialize buffers for each of them
 // This version is not a version with encapsulation
 // We use the VisualObject members mBuffer and mBufferMemory
-void Renderer::createBuffer(VkDevice logicalDevice, const VkDeviceSize uniformAlignment,
-                            VisualObject* visualObject, VkBufferUsageFlags usage)
+void RenderWindow::createBuffer(VkDevice logicalDevice, const VkDeviceSize uniformAlignment,
+                                VisualObject* visualObject, VkBufferUsageFlags usage)
 {
     //Gets the size of the mesh - aligned to the uniform alignment
     VkDeviceSize vertexAllocSize = aligned(visualObject->getVertices().size() * sizeof(Vertex), uniformAlignment);
@@ -557,7 +655,7 @@ void Renderer::createBuffer(VkDevice logicalDevice, const VkDeviceSize uniformAl
 //Very similar to createBuffer, but here we find and set the memory type explicitly
 //Also the generation of the buffer is in a separate function
 //and copy data to GPU read only memory
-void Renderer::createVertexBuffer(const VkDeviceSize uniformAlignment, VisualObject* visualObject)
+void RenderWindow::createVertexBuffer(const VkDeviceSize uniformAlignment, VisualObject* visualObject)
 {
     //Get the size of the mesh and align it to the uniform alignment
     VkDeviceSize vertexAllocSize = aligned(visualObject->getVertices().size() * sizeof(Vertex), uniformAlignment);
@@ -592,7 +690,7 @@ void Renderer::createVertexBuffer(const VkDeviceSize uniformAlignment, VisualObj
     destroyBuffer(stagingHandle);
 }
 
-void Renderer::createIndexBuffer(const VkDeviceSize uniformAlignment, VisualObject* visualObject)
+void RenderWindow::createIndexBuffer(const VkDeviceSize uniformAlignment, VisualObject* visualObject)
 {
     //Get the size of the mesh and align it to the uniform alignment
     VkDeviceSize indexAllocSize = aligned(visualObject->getIndices().size() * sizeof(uint32_t), uniformAlignment);
@@ -628,7 +726,7 @@ void Renderer::createIndexBuffer(const VkDeviceSize uniformAlignment, VisualObje
     destroyBuffer(stagingHandle);
 }
 
-BufferHandle Renderer::createGeneralBuffer(const VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+BufferHandle RenderWindow::createGeneralBuffer(const VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 {
     BufferHandle bufferHandle{};
 
@@ -667,7 +765,7 @@ BufferHandle Renderer::createGeneralBuffer(const VkDeviceSize size, VkBufferUsag
 }
 
 //Create a descriptor set layout that describes the uniform buffer.
-void Renderer::createDescriptorSetLayouts()
+void RenderWindow::createDescriptorSetLayouts()
 {
     //Uniforms - View and projection matrix
     VkDescriptorSetLayoutBinding uniformLayoutBinding{};
@@ -703,7 +801,7 @@ void Renderer::createDescriptorSetLayouts()
 
 }
 
-void Renderer::createUniformBuffer()
+void RenderWindow::createUniformBuffer()
 {
     VkDeviceSize bufferSize = 64 + 64;      // two 4x4 matrices
 
@@ -717,7 +815,7 @@ void Renderer::createUniformBuffer()
 }
 
 //Allocate a descriptor set and update it to point to the uniform buffer
-void Renderer::createDescriptorSet()
+void RenderWindow::createDescriptorSet()
 {
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -747,7 +845,7 @@ void Renderer::createDescriptorSet()
 }
 
 //Create a descriptor pools to allocate descriptor sets.
-void Renderer::createDescriptorPools()
+void RenderWindow::createDescriptorPools()
 {
     //For Uniforms
     VkDescriptorPoolSize uniformPoolSize{};
@@ -784,7 +882,7 @@ void Renderer::createDescriptorPools()
 
 /*************************************************************************************************/
 
-void Renderer::getVulkanHWInfo()
+void RenderWindow::getVulkanHWInfo()
 {
     qDebug("\n ***************************** Vulkan Hardware Info ******************************************* \n");
     QVulkanInstance *inst = mWindow->vulkanInstance();
@@ -836,7 +934,7 @@ void Renderer::getVulkanHWInfo()
     qDebug("\n ***************************** Vulkan Hardware Info finished ******************************************* \n");
 }
 
-void Renderer::releaseSwapChainResources()
+void RenderWindow::releaseSwapChainResources()
 {
     qDebug("\n ***************************** releaseSwapChainResources ******************************************* \n");
     /* from VulkanCubes
@@ -856,7 +954,7 @@ void Renderer::releaseSwapChainResources()
 
 // Function called by Qt when the application typically when app is closing
 // It automatically waits for the GPU to be idle before releasing resources
-void Renderer::releaseResources()
+void RenderWindow::releaseResources()
 {
     qDebug("\n ***************************** releaseResources ******************************************* \n");
 
@@ -867,10 +965,6 @@ void Renderer::releaseResources()
         mPipeline1 = VK_NULL_HANDLE;
     }
 
-    if (mColorMaterial.pipeline) {
-        mDeviceFunctions->vkDestroyPipeline(dev, mColorMaterial.pipeline, nullptr);
-        mColorMaterial.pipeline = VK_NULL_HANDLE;
-    }
 
     if (mPipelineLayout) {
         mDeviceFunctions->vkDestroyPipelineLayout(dev, mPipelineLayout, nullptr);
@@ -929,7 +1023,7 @@ void Renderer::releaseResources()
 }
 
 //Helper function to find the memory type - Qt has this built in, but it is hidden
-uint32_t Renderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags requiredProperties)
+uint32_t RenderWindow::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags requiredProperties)
 {
     VkPhysicalDeviceMemoryProperties memoryProperties;
 
@@ -959,7 +1053,7 @@ uint32_t Renderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags req
 }
 
 // Function to create a command buffer that is short lived and not a part of the Rendering command
-VkCommandBuffer Renderer::beginTransientCommandBuffer()
+VkCommandBuffer RenderWindow::beginTransientCommandBuffer()
 {
     VkCommandBufferAllocateInfo allocateInfo{};
     allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -980,7 +1074,7 @@ VkCommandBuffer Renderer::beginTransientCommandBuffer()
 }
 
 // Function to end a short lived command buffer
-void Renderer::endTransientCommandBuffer(VkCommandBuffer commandBuffer)
+void RenderWindow::endTransientCommandBuffer(VkCommandBuffer commandBuffer)
 {
     mDeviceFunctions->vkEndCommandBuffer(commandBuffer);
 
@@ -996,13 +1090,13 @@ void Renderer::endTransientCommandBuffer(VkCommandBuffer commandBuffer)
 }
 
 // Function to destroy a buffer and its memory
-void Renderer::destroyBuffer(BufferHandle handle) {
+void RenderWindow::destroyBuffer(BufferHandle handle) {
     mDeviceFunctions->vkDeviceWaitIdle(mWindow->device());
     mDeviceFunctions->vkDestroyBuffer(mWindow->device(), handle.mBuffer, nullptr);
     mDeviceFunctions->vkFreeMemory(mWindow->device(), handle.mBufferMemory, nullptr);
 }
 
-void Renderer::createTextureSampler()
+void RenderWindow::createTextureSampler()
 {
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -1027,7 +1121,7 @@ void Renderer::createTextureSampler()
         qFatal("Failed to create texture sampler: %d", err);
 }
 
-TextureHandle Renderer::createTexture(const char* filename)
+TextureHandle RenderWindow::createTexture(const char* filename)
 {
     int texWidth, texHeight, texChannels;
     VkDeviceSize bufferSize{};
@@ -1151,7 +1245,7 @@ TextureHandle Renderer::createTexture(const char* filename)
     return textureHandle;
 }
 
-TextureHandle Renderer::createImage(int width, int height, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkFormat format)
+TextureHandle RenderWindow::createImage(int width, int height, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkFormat format)
 {
     TextureHandle textureHandle{};
 
@@ -1201,7 +1295,7 @@ TextureHandle Renderer::createImage(int width, int height, VkBufferUsageFlags us
     return textureHandle;
 }
 
-void Renderer::transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
+void RenderWindow::transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
     VkCommandBuffer commandBuffer = beginTransientCommandBuffer();
 
@@ -1241,7 +1335,7 @@ void Renderer::transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkI
     endTransientCommandBuffer(commandBuffer);
 }
 
-void Renderer::copyBufferToImage(VkBuffer buffer, VkImage image, int width, int height)
+void RenderWindow::copyBufferToImage(VkBuffer buffer, VkImage image, int width, int height)
 {
     VkCommandBuffer commandBuffer = beginTransientCommandBuffer();
 
@@ -1261,7 +1355,7 @@ void Renderer::copyBufferToImage(VkBuffer buffer, VkImage image, int width, int 
     endTransientCommandBuffer(commandBuffer);
 }
 
-VkImageView Renderer::createImageView(VkImage image, VkFormat format)
+VkImageView RenderWindow::createImageView(VkImage image, VkFormat format)
 {
     VkImageViewCreateInfo info{};
     info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -1287,7 +1381,7 @@ VkImageView Renderer::createImageView(VkImage image, VkFormat format)
     return view;
 }
 
-void Renderer::destroyTexture(TextureHandle& textureHandle)
+void RenderWindow::destroyTexture(TextureHandle& textureHandle)
 {
     mDeviceFunctions->vkDeviceWaitIdle(mWindow->device());
     mDeviceFunctions->vkFreeDescriptorSets(mWindow->device(), mTextureDescriptorPool, 1, &textureHandle.mTextureDescriptorSet);

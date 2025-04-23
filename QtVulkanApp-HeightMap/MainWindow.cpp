@@ -107,7 +107,7 @@ void MainWindow::openFile() // slot
     if (!filnavn.isEmpty())
     {
         TriangleSurface* surf = new TriangleSurface(filnavn.toStdString());
-        auto rw = dynamic_cast<Renderer*>(mVulkanWindow->getRenderWindow());
+        auto rw = dynamic_cast<RenderWindow*>(mVulkanWindow->getRenderWindow());
         rw->getObjects().push_back(surf);
         rw->releaseResources();
         rw->initResources();
@@ -123,7 +123,7 @@ void MainWindow::selectName()
     if (ok && !text.isEmpty())
         mSelectedName = text.toStdString();
 
-    auto rw = dynamic_cast<Renderer*>(mVulkanWindow->getRenderWindow());
+    auto rw = dynamic_cast<RenderWindow*>(mVulkanWindow->getRenderWindow());
     auto map = rw->getMap();
     auto visualObject = map[mSelectedName];
     if (visualObject != nullptr)

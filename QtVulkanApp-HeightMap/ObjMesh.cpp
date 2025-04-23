@@ -16,6 +16,7 @@ ObjMesh::ObjMesh(const std::string& filename)
     }
 
     mMatrix.translate(1.f, 0, 0);
+    drawType = 0;
 }
 
 bool ObjMesh::readObjFile(const std::string& filename)

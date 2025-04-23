@@ -18,6 +18,7 @@ public:
     void setSpeed(float speed);
     void moveRight(float delta);
     void updateHeigth(float deltaHeigth);
+    void moveForward(float delta);
     //QMatrix4x4 cMatrix();
 
     inline QMatrix4x4 viewMatrix() const { return mViewMatrix; }

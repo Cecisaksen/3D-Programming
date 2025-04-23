@@ -44,7 +44,6 @@ void Camera::update()
 {
     //Set ViewMatrix to Identity, then add the new position and rotations
     mViewMatrix.setToIdentity();
-    mPosition.setZ(mPosition.z() + mSpeed);
     //mViewMatrix.translate(mPosition);               //Makes rotation work around World Origo
     mViewMatrix.rotate(mYaw, 0.f, 1.f, 0.f);
     mViewMatrix.rotate(mPitch, 1.f, 0.f, 0.f);
@@ -71,6 +70,11 @@ void Camera::moveRight(float delta)
 void Camera::updateHeigth(float deltaHeigth)
 {
     mPosition.setY(mPosition.y() + deltaHeigth);
+}
+
+void Camera::moveForward(float delta)
+{
+    mPosition.setZ(mPosition.z() + delta);
 }
 
 //Translate camera in world coordinates

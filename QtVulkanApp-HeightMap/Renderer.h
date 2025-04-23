@@ -10,10 +10,10 @@
 #include "VisualObject.h"
 #include "Utilities.h"
 
-class Renderer : public QVulkanWindowRenderer
+class RenderWindow : public QVulkanWindowRenderer
 {
 public:
-    Renderer(QVulkanWindow *w, bool msaa = false);
+    RenderWindow(QVulkanWindow *w, bool msaa = false);
 
     //Initializes the Vulkan resources needed,
     // the buffers
@@ -39,6 +39,7 @@ public:
 
     std::vector<VisualObject*>& getObjects() { return mObjects; }
     std::unordered_map<std::string, VisualObject*>& getMap() { return mMap; }
+    Player* GetPlayer() {return mPlayer;}
 
 protected:
 
@@ -53,8 +54,6 @@ protected:
 
     //The ModelViewProjection MVP matrix
     QMatrix4x4 mProjectionMatrix;
-    //Rotation angle of the triangle
-    float mRotation{ 0.0f };
 
     //Vulkan resources:
     QVulkanWindow* mWindow{ nullptr };
@@ -82,12 +81,10 @@ protected:
 
 private:
     friend class VulkanWindow;
-    std::vector<VisualObject*> mObjects;    //All objects in the program
-    std::unordered_map<std::string, VisualObject*> mMap;    // alternativ container
-
     Player* mPlayer;
     TriangleSurface mSurface;
     VisualObject mVisualObject;
+    std::vector<VisualObject*> mObjects;
     std::vector<VisualObject*> mObjects2;
 
     Pickup* inHouse;
@@ -101,6 +98,8 @@ private:
 
     std::vector<Pickup*> mPickup;
     bool doorTriggered = false;
+
+    std::unordered_map<std::string, VisualObject*> mMap;    // alternativ container
 
     void createBuffer(VkDevice logicalDevice,
                       const VkDeviceSize uniAlign, VisualObject* visualObject,
@@ -144,12 +143,15 @@ private:
     void* mUniformBufferLocation{ nullptr };
 
     // Color shader material / shader
-    struct {
+    struct mColorMaterial {
         VkShaderModule vertShaderModule;
         VkShaderModule fragShaderModule;
         //VkPipelineLayout pipelineLayout{ VK_NULL_HANDLE };    //also should have had a spesific pipeline layout
         VkPipeline pipeline{ VK_NULL_HANDLE };
-    } mColorMaterial;
+    };
+
+    std::map<std::string, mColorMaterial> colorMaterialMap;
+    std::map<std::string, TextureHandle> mTextureMap;
 };
 
 #endif // RENDERER_H

@@ -27,6 +27,7 @@ qt_add_executable(QtVulkanApp
     NPC.h NPC.cpp
     Pickup.h Pickup.cpp
     Door.h Door.cpp
+
 )
 # Define the shader files
 set(SHADER_FILES
